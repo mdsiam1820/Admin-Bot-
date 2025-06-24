@@ -17,19 +17,13 @@ module.exports.run = async function({ api, event }) {
     try {
         const time = moment().tz("Asia/Dhaka").format("DD/MM/YYYY hh:mm:ss A");
         
-        // আপনার ফেসবুক ফটো লিংক (সরাসরি ইমেজ URL)
-        const photoLink = "https://www.facebook.com/photo.php?fbid=122221679618136307&set=a.122101281002136307&type=3";
-        
-        // ফটো থেকে সরাসরি ইমেজ URL এক্সট্র্যাক্ট করার জন্য
-        const imageURL = await getDirectImageURL(photoLink);
+        // সরাসরি ইমেজ URL (আপনার কপি করা লিংক দিয়ে রিপ্লেস করুন)
+        const imageURL = "https://scontent.fdac14-1.fna.fbcdn.net/v/t39.30808-6/432432432_122221679618136307_1234567890123456789_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=5f2048&_nc_ohc=abcdefghijkAbCdEfGhIjK-Q&_nc_ht=scontent.fdac14-1.fna&oh=00_AfDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd&oe=662A5B5C";
         
         const path = __dirname + '/cache/adminPic.jpg';
-        
-        // ছবি ডাউনলোড
         const { data } = await axios.get(imageURL, { responseType: 'arraybuffer' });
         await fs.writeFile(path, Buffer.from(data, 'binary'));
 
-        // মেসেজ পাঠানো
         await api.sendMessage({
             body: `
 ┏━━━━━━━━━━━━━━━━━━━━━┓
@@ -51,33 +45,9 @@ module.exports.run = async function({ api, event }) {
             attachment: fs.createReadStream(path)
         }, event.threadID);
 
-        // টেম্প ফাইল ডিলিট
         fs.unlinkSync(path);
-        
     } catch (error) {
         console.error("Error:", error);
-        api.sendMessage("❌ আমার প্রোফাইল ছবি লোড করতে সমস্যা হচ্ছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।", event.threadID);
+        api.sendMessage("❌ ছবি লোড করতে ব্যর্থ! অনুগ্রহ করে ইমেজ URL চেক করুন।", event.threadID);
     }
 };
-
-async function getDirectImageURL(photoLink) {
-    try {
-        // Facebook ফটো লিংক থেকে সরাসরি ইমেজ URL পাওয়ার জন্য
-        const response = await axios.get(photoLink);
-        const html = response.data;
-        
-        // ইমেজ URL এক্সট্র্যাক্ট (সরলীকৃত পদ্ধতি)
-        const regex = /<meta property="og:image" content="(.*?)"/;
-        const match = html.match(regex);
-        
-        if (match && match[1]) {
-            return match[1];
-        } else {
-            throw new Error("Direct image URL not found");
-        }
-    } catch (err) {
-        console.error("Facebook photo parsing error:", err);
-        // ফটব্যাক হিসেবে Graph API ব্যবহার
-        return "https://graph.facebook.com/61554089225155/picture?width=720&height=720";
-    }
-}
