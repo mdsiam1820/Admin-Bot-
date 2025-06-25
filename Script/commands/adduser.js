@@ -2,7 +2,7 @@ module.exports.config = {
 	name: "adduser",
 	version: "2.4.3",
 	hasPermssion: 0,
-	credits: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
+	credits: "👑 𝐀𝐝𝐦𝐢𝐧 • 𝐁𝐨𝐬𝐬 𝐒𝐢𝐚𝐦 ☢️",
 	description: "Add user to the group by link or id",
 	commandCategory: "group",
 	usages: "[args]",
