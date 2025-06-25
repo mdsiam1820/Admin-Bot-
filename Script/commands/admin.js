@@ -1,5 +1,5 @@
-const axios = require("axios");
 const fs = require("fs-extra");
+const request = require("request");
 const moment = require("moment-timezone");
 
 module.exports.config = {
@@ -14,18 +14,17 @@ module.exports.config = {
 };
 
 module.exports.run = async function({ api, event }) {
-    try {
-        const time = moment().tz("Asia/Dhaka").format("DD/MM/YYYY hh:mm:ss A");
-        
-        // সরাসরি ইমেজ URL (আপনার কপি করা লিংক দিয়ে রিপ্লেস করুন)
-        const imageURL = "https://scontent.fdac14-1.fna.fbcdn.net/v/t39.30808-6/432432432_122221679618136307_1234567890123456789_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=5f2048&_nc_ohc=abcdefghijkAbCdEfGhIjK-Q&_nc_ht=scontent.fdac14-1.fna&oh=00_AfDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd&oe=662A5B5C";
-        
-        const path = __dirname + '/cache/adminPic.jpg';
-        const { data } = await axios.get(imageURL, { responseType: 'arraybuffer' });
-        await fs.writeFile(path, Buffer.from(data, 'binary'));
+    const filePath = __dirname + "/cache/1.png";
+    const time = moment().tz("Asia/Dhaka").format("DD/MM/YYYY hh:mm:ss A");
 
-        await api.sendMessage({
-            body: `
+    // ফাইল থাকলে আগে মুছে ফেলো
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+    }
+
+    // ছবি ডাউনলোডের পর মেসেজ পাঠানো
+    const callback = () => api.sendMessage({
+        body: `
 ┏━━━━━━━━━━━━━━━━━━━━━┓
 ┃      🌟 𝗢𝗪𝗡𝗘𝗥 𝗜𝗡𝗙𝗢 🌟      
 ┣━━━━━━━━━━━━━━━━━━━━━┫
@@ -41,13 +40,12 @@ module.exports.run = async function({ api, event }) {
 ┣━━━━━━━━━━━━━━━━━━━━━┫
 ┃ 🕒 𝗨𝗽𝗱𝗮𝘁𝗲𝗱 𝗧𝗶𝗺𝗲 : ${time}
 ┗━━━━━━━━━━━━━━━━━━━━━┛
-            `,
-            attachment: fs.createReadStream(path)
-        }, event.threadID);
+        `,
+        attachment: fs.createReadStream(filePath)
+    }, event.threadID, () => fs.unlinkSync(filePath));
 
-        fs.unlinkSync(path);
-    } catch (error) {
-        console.error("Error:", error);
-        api.sendMessage("❌ ছবি লোড করতে ব্যর্থ! অনুগ্রহ করে ইমেজ URL চেক করুন।", event.threadID);
-    }
+    // ছবি ডাউনলোড করা
+    return request("https://i.ibb.co/9mwXdgyG/Picsart-25-02-15-07-13-07-933.jpg")
+        .pipe(fs.createWriteStream(filePath))
+        .on('close', () => callback());
 };
