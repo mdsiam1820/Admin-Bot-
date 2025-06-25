@@ -2,7 +2,7 @@ module.exports.config = {
  name: "islamick",
  version: "1.0.0",
  hasPermssion: 0,
- credits: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
+ credits: "👑 𝐀𝐝𝐦𝐢𝐧 • 𝐁𝐨𝐬𝐬 𝐒𝐢𝐚𝐦 ☢️",
  description: "RANDOM islamic video",
  commandCategory: "Random video",
  usages: "Statusvideo",
