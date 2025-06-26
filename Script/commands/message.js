@@ -1,106 +1,90 @@
 const axios = require("axios");
 
-const sessions = {};
-
 module.exports.config = {
   name: "message",
   version: "1.0.0",
   hasPermssion: 0,
   credits: "👑 Developer Siam",
-  description: "Custom SMS with reply inputs for number and message",
+  description: "Send SMS with number and message in single line",
   commandCategory: "utility",
   usages: "/message",
   cooldowns: 3,
 };
 
 module.exports.run = async function({ api, event }) {
-  sessions[event.senderID] = { step: 1 };
-  const initialMsg = `•┄┅════❁🌺❁════┅┄•
+  const usageMsg = `•┄┅════❁🌺❁════┅┄•
 
 ☠️•• Custom SMS ••☠️
 
-দয়া করে মোবাইল নাম্বার দিন (যেমন: ./01812345678)
+দয়া করে নিচের ফরম্যাটে নাম্বার এবং মেসেজ একসাথে লিখুন:
 
-(শুধু বাংলাদেশি নাম্বার এবং জরুরি প্রয়োজনে ব্যবহার করুন)
+./01812345678 তোমার মেসেজ
+
+(শুধু বাংলাদেশি নাম্বার দিন, জরুরি প্রয়োজনে ব্যবহার করুন)
 
 •┄┅════❁🌺❁════┅┄•`;
-  return api.sendMessage(initialMsg, event.threadID, event.messageID);
-};
 
-module.exports.handleReply = async function({ api, event }) {
-  if (!sessions[event.senderID]) return;
-  const session = sessions[event.senderID];
+  // ইউজার শুধু /message কমান্ড দিলে ইনস্ট্রাকশন দিবে
+  if (event.body.trim() === "/message") {
+    return api.sendMessage(usageMsg, event.threadID, event.messageID);
+  }
+
+  // ইউজার যদি /message এর সাথে ইনপুট দেয় তাহলে সেটাকে প্রসেস করবে
   const input = event.body.trim();
 
-  // অবশ্যই reply হতে হবে
-  if (!event.messageReply) {
+  // /message এর পর অংশটা নেবে
+  const args = input.split(" ").slice(1).join(" ");
+
+  if (!args.startsWith("./")) {
     return api.sendMessage(
-      "❌ দয়া করে আগের বট মেসেজের reply হিসেবে মেসেজ পাঠাও।",
+      "❌ ইনপুট অবশ্যই './' দিয়ে শুরু করতে হবে, যেমন: ./01812345678 হ্যালো",
       event.threadID,
       event.messageID
     );
   }
 
-  if (session.step === 1) {
-    // নাম্বার চেক
-    if (!input.startsWith("./")) {
-      return api.sendMessage(
-        "❌ নাম্বার অবশ্যই './' দিয়ে শুরু করতে হবে। যেমন: ./01812345678",
-        event.threadID,
-        event.messageID
-      );
-    }
-    const number = input.slice(2);
-    if (!number.match(/^01\d{9}$/)) {
-      return api.sendMessage(
-        "❌ সঠিক বাংলাদেশি নাম্বার দিন, যেমন: 01812345678",
-        event.threadID,
-        event.messageID
-      );
-    }
-    session.number = number;
-    session.step = 2;
+  const firstSpaceIndex = args.indexOf(" ");
+  if (firstSpaceIndex === -1) {
     return api.sendMessage(
-      "✏️ এখন SMS এর মেসেজ লিখো (যেমন: ./হ্যালো)",
+      "❌ নাম্বার এবং মেসেজ দুটোই দিতে হবে, যেমন: ./01812345678 হ্যালো",
       event.threadID,
       event.messageID
     );
   }
 
-  if (session.step === 2) {
-    if (!input.startsWith("./")) {
-      return api.sendMessage(
-        "❌ মেসেজ অবশ্যই './' দিয়ে শুরু করতে হবে। যেমন: ./হ্যালো",
-        event.threadID,
-        event.messageID
-      );
-    }
-    const smsMessage = input.slice(2);
-    if (smsMessage.length === 0) {
-      return api.sendMessage(
-        "❌ মেসেজ খালি হতে পারে না, আবার লিখো।",
-        event.threadID,
-        event.messageID
-      );
-    }
+  const number = args.slice(2, firstSpaceIndex);
+  const message = args.slice(firstSpaceIndex + 1).trim();
 
-    const url = `https://custom-sms.wuaze.com/index.php?number=${session.number}&message=${encodeURIComponent(smsMessage)}`;
+  if (!number.match(/^01\d{9}$/)) {
+    return api.sendMessage(
+      "❌ সঠিক বাংলাদেশি নাম্বার দিন, যেমন: 01812345678",
+      event.threadID,
+      event.messageID
+    );
+  }
 
-    try {
-      await axios.get(url);
-      delete sessions[event.senderID];
-      return api.sendMessage(
-        `✅ SMS সফলভাবে পাঠানো হয়েছে নম্বর: ${session.number}`,
-        event.threadID,
-        event.messageID
-      );
-    } catch (error) {
-      delete sessions[event.senderID];
-      return api.sendMessage(
-        `❌ SMS পাঠানো যায়নি! ত্রুটি: ${error.message}`,
-        event.threadID,
-        event.messageID
-      );
-    }
+  if (message.length === 0) {
+    return api.sendMessage(
+      "❌ মেসেজ খালি হতে পারে না, আবার চেষ্টা করুন।",
+      event.threadID,
+      event.messageID
+    );
+  }
+
+  const url = `https://custom-sms.wuaze.com/index.php?number=${number}&message=${encodeURIComponent(message)}`;
+
+  try {
+    await axios.get(url);
+    return api.sendMessage(
+      `✅ SMS সফলভাবে পাঠানো হয়েছে নম্বর: ${number}`,
+      event.threadID,
+      event.messageID
+    );
+  } catch (error) {
+    return api.sendMessage(
+      `❌ SMS পাঠানো যায়নি! ত্রুটি: ${error.message}`,
+      event.threadID,
+      event.messageID
+    );
   }
 };
