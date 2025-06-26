@@ -5,9 +5,9 @@ module.exports.config = {
   version: "1.0.0",
   hasPermssion: 0,
   credits: "👑 Developer Siam",
-  description: "Send SMS with number and message in single line",
+  description: "Send SMS with number and message in single command",
   commandCategory: "utility",
-  usages: "/message",
+  usages: "/message ./01812345678 তোমার মেসেজ",
   cooldowns: 3,
 };
 
@@ -74,13 +74,15 @@ module.exports.run = async function({ api, event }) {
   const url = `https://custom-sms.wuaze.com/index.php?number=${number}&message=${encodeURIComponent(message)}`;
 
   try {
-    await axios.get(url);
+    const response = await axios.get(url);
+    console.log("API Response:", response.data);
     return api.sendMessage(
       `✅ SMS সফলভাবে পাঠানো হয়েছে নম্বর: ${number}`,
       event.threadID,
       event.messageID
     );
   } catch (error) {
+    console.log("SMS API error:", error.response?.data || error.message || error);
     return api.sendMessage(
       `❌ SMS পাঠানো যায়নি! ত্রুটি: ${error.message}`,
       event.threadID,
