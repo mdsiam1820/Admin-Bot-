@@ -4,89 +4,36 @@ module.exports.config = {
   name: "message",
   version: "1.0.0",
   hasPermssion: 0,
-  credits: "👑 Developer Siam",
-  description: "Send SMS with number and message in single command",
+  credits: "Developer SIAM",
+  description: "Send custom SMS using API",
   commandCategory: "utility",
-  usages: "/message ./01812345678 তোমার মেসেজ",
-  cooldowns: 3,
+  usages: "/message [number] [message]",
+  cooldowns: 5,
 };
 
-module.exports.run = async function({ api, event }) {
-  const usageMsg = `•┄┅════❁🌺❁════┅┄•
-
-☠️•• Custom SMS ••☠️
-
-দয়া করে নিচের ফরম্যাটে নাম্বার এবং মেসেজ একসাথে লিখুন:
-
-./01812345678 তোমার মেসেজ
-
-(শুধু বাংলাদেশি নাম্বার দিন, জরুরি প্রয়োজনে ব্যবহার করুন)
-
-•┄┅════❁🌺❁════┅┄•`;
-
-  // ইউজার শুধু /message কমান্ড দিলে ইনস্ট্রাকশন দিবে
-  if (event.body.trim() === "/message") {
-    return api.sendMessage(usageMsg, event.threadID, event.messageID);
-  }
-
-  // ইউজার যদি /message এর সাথে ইনপুট দেয় তাহলে সেটাকে প্রসেস করবে
-  const input = event.body.trim();
-
-  // /message এর পর অংশটা নেবে
-  const args = input.split(" ").slice(1).join(" ");
-
-  if (!args.startsWith("./")) {
+module.exports.run = async ({ api, event, args }) => {
+  if (args.length < 2) {
     return api.sendMessage(
-      "❌ ইনপুট অবশ্যই './' দিয়ে শুরু করতে হবে, যেমন: ./01812345678 হ্যালো",
+      "❌ ব্যবহারঃ /message [number] [message]\n\n📌 উদাহরণঃ /message 01832 hi",
       event.threadID,
       event.messageID
     );
   }
 
-  const firstSpaceIndex = args.indexOf(" ");
-  if (firstSpaceIndex === -1) {
-    return api.sendMessage(
-      "❌ নাম্বার এবং মেসেজ দুটোই দিতে হবে, যেমন: ./01812345678 হ্যালো",
-      event.threadID,
-      event.messageID
-    );
-  }
-
-  const number = args.slice(2, firstSpaceIndex);
-  const message = args.slice(firstSpaceIndex + 1).trim();
-
-  if (!number.match(/^01\d{9}$/)) {
-    return api.sendMessage(
-      "❌ সঠিক বাংলাদেশি নাম্বার দিন, যেমন: 01812345678",
-      event.threadID,
-      event.messageID
-    );
-  }
-
-  if (message.length === 0) {
-    return api.sendMessage(
-      "❌ মেসেজ খালি হতে পারে না, আবার চেষ্টা করুন।",
-      event.threadID,
-      event.messageID
-    );
-  }
+  const number = args[0];
+  const message = args.slice(1).join(" ");
 
   const url = `https://custom-sms.wuaze.com/index.php?number=${number}&message=${encodeURIComponent(message)}`;
 
   try {
-    const response = await axios.get(url);
-    console.log("API Response:", response.data);
-    return api.sendMessage(
-      `✅ SMS সফলভাবে পাঠানো হয়েছে নম্বর: ${number}`,
-      event.threadID,
-      event.messageID
-    );
+    const res = await axios.get(url);
+
+    if (res.data.includes("Success") || res.status === 200) {
+      api.sendMessage(`✅ সফলভাবে পাঠানো হয়েছে!\n📲 নম্বরঃ ${number}\n✉️ মেসেজঃ ${message}`, event.threadID);
+    } else {
+      api.sendMessage("❌ এসএমএস পাঠাতে সমস্যা হচ্ছে।", event.threadID);
+    }
   } catch (error) {
-    console.log("SMS API error:", error.response?.data || error.message || error);
-    return api.sendMessage(
-      `❌ SMS পাঠানো যায়নি! ত্রুটি: ${error.message}`,
-      event.threadID,
-      event.messageID
-    );
+    api.sendMessage("❌ সার্ভারে সমস্যা হয়েছে বা API কাজ করছে না।", event.threadID);
   }
 };
