@@ -1,10 +1,10 @@
 const fs = global.nodemodule["fs-extra"];
 module.exports.config = {
-  name: "royal-protect-plus",
-  version: "3.0.0",
+  name: "ultimate-protect",
+  version: "5.0.0",
   hasPermssion: 0,
   credits: "Developer",
-  description: "Advanced Royal Protection System",
+  description: "সম্পূর্ণ এডমিন ও রয়্যাল প্রটেকশন সিস্টেম",
   commandCategory: "noprefix",
   usages: "",
   cooldowns: 3,
@@ -13,52 +13,72 @@ module.exports.config = {
 module.exports.handleEvent = async function({ api, event }) {
   const { threadID, messageID, body } = event;
   
-  // Advanced Royal Protection System
-  const royalProtection = {
-    "siam": {
-      emoji: "👑",
+  // Complete Protection System
+  const protectionSystem = {
+    // Admin Protection
+    admin: {
+      name: "সিয়াম (Siam)",
+      title: "👑 সর্বোচ্চ এডমিন ও গ্রুপ মালিক 👑",
+      emoji: "🛡️",
       responses: [
-        "ওই ছোটলোক! রাজা সিয়াম সাহেবকে ডাইরেক্ট ডাক দিবেন না! 😤 (নিয়ম কানুন মানেন!)",
-        "⚠️ সাবধান! রাজা সিয়ামের নাম নেওয়া নিষেধ!",
-        "⛔ মহারাজা সিয়ামের নাম মুখে নেওয়ার সাহস? 😡"
+        "⚠️ সতর্কতা! এডমিন সিয়াম সাহেবকে ডাকবেন না!",
+        "⛔ সরাসরি এডমিনকে ডাকা নিষেধ!",
+        "🔴 নামটি মুছে ফেলুন! এডমিন ট্যাগ করা যাবে না!"
       ],
-      pattern: /(?:^|\s)siam(?=\s|$)/i
+      patterns: [
+        /(?:^|\s)সিয়াম(?=\s|$)/,
+        /(?:^|\s)siam(?=\s|$)/i
+      ],
+      footer: "📌 প্রয়োজনে ইনবক্সে যোগাযোগ করুন"
     },
-    "সিয়াম": {
-      emoji: "🤴",
-      responses: [
-        "আরে বাপ রে! আমাদের মহারাজা সিয়াম সাহেবকে ডাকছো? 😱 (পদ্মফুল এনে ক্ষমা চাও!)",
-        "🚨 রাজদ্রোহ! সিয়াম সাহেবের নাম নিষিদ্ধ!",
-        "🔴 নামটি মুছে ফেলুন! নাহলে রাজদরবারে ডাকা হবে!"
-      ],
-      pattern: /(?:^|\s)সিয়াম(?=\s|$)/
+    
+    // Royal Protection
+    royal: {
+      "nafisa": {
+        emoji: "👸",
+        title: "মহারানী নাফিসা",
+        responses: [
+          "🌸 রানী সাহেবাকে ডাকার আগে অনুমতি নিন!",
+          "💐 নাফিসা দেবীর নাম সম্মান সহকারে নিন!",
+          "✨ মহারানীর নামে অসম্মান করো না!"
+        ],
+        pattern: /(?:^|\s)নাফিসা(?=\s|$)/,
+        footer: "❤️ সম্মান বজায় রাখুন"
+      }
     },
-    "nafisa": {
-      emoji: "👸",
-      responses: [
-        "উফ্ফ! রানী নাফিসা সাহেবাকে ডাকার সাহস? 😳 (তোমার তো বড় দুঃসাহস!)",
-        "💢 রানী নাফিসার নাম মুখে আনতে নিষেধ!",
-        "⚜️ মহারানীর নাম নেওয়ার আগে অনুমতি নিন!"
-      ],
-      pattern: /(?:^|\s)nafisa(?=\s|$)/i
-    },
-    "নাফিসা": {
-      emoji: "💍",
-      responses: [
-        "শুনো হে প্রজা! মহারানী নাফিসা দেবীকে ডাকার আগে রাজদরবার থেকে পারমিশন নিবেন! ✨",
-        "🌸 রানী নাফিসার নাম নিষিদ্ধ! সম্মান বজায় রাখুন!",
-        "👑 মহারানীর নাম সরাসরি ডাকা রাজদ্রোহের শামিল!"
-      ],
-      pattern: /(?:^|\s)নাফিসা(?=\s|$)/
-    }
+
+    // Question Answering
+    questions: [
+      {
+        pattern: /(এডমিন|admin|বস|boss)(ের|er)?\s*(নাম|name)\s*(কি|what|who)/i,
+        response: `🛡️ এডমিন ইনফো:\n\n» নাম: সিয়াম (Siam)\n» পদ: সর্বোচ্চ এডমিন\n📌 নিয়ম: সরাসরি ডাকা নিষেধ!`
+      }
+    ]
   };
 
-  // Check message for protected names
-  for (const name in royalProtection) {
-    const { pattern, emoji, responses } = royalProtection[name];
+  // Check for questions first
+  for (const q of protectionSystem.questions) {
+    if (q.pattern.test(body)) {
+      return api.sendMessage(q.response, threadID, messageID);
+    }
+  }
+
+  // Check Admin Protection
+  for (const pattern of protectionSystem.admin.patterns) {
+    if (pattern.test(body)) {
+      const randomResponse = protectionSystem.admin.responses[Math.floor(Math.random() * protectionSystem.admin.responses.length)];
+      const adminMessage = `${protectionSystem.admin.emoji} ${protectionSystem.admin.title} ${protectionSystem.admin.emoji}\n\n${randomResponse}\n\n${protectionSystem.admin.footer}`;
+      return api.sendMessage(adminMessage, threadID, messageID);
+    }
+  }
+
+  // Check Royal Protection
+  for (const name in protectionSystem.royal) {
+    const { pattern, emoji, title, responses, footer } = protectionSystem.royal[name];
     if (pattern.test(body)) {
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      return api.sendMessage(`${emoji} ${randomResponse} ${emoji}`, threadID, messageID);
+      const royalMessage = `${emoji} ${title} ${emoji}\n\n${randomResponse}\n\n${footer}`;
+      return api.sendMessage(royalMessage, threadID, messageID);
     }
   }
 };
