@@ -15,7 +15,7 @@ module.exports.handleEvent = async function({ api, event }) {
   
   // Complete Protection System
   const protectionSystem = {
-    // Admin Protection
+    // Admin Protection (অপরিবর্তিত)
     admin: {
       name: "সিয়াম (Siam)",
       title: "👑 সর্বোচ্চ এডমিন ও গ্রুপ মালিক 👑",
@@ -26,13 +26,13 @@ module.exports.handleEvent = async function({ api, event }) {
         "🔴 নামটি মুছে ফেলুন! এডমিন ট্যাগ করা যাবে না!"
       ],
       patterns: [
-        /(?:^|\s)সিয়াম(?=\s|$)/,
-        /(?:^|\s)siam(?=\s|$)/i
+        /(?:^|\s)(সিয়াম|siam)(?=\s|$)/i,
+        /@(সিয়াম|siam)/i
       ],
       footer: "📌 প্রয়োজনে ইনবক্সে যোগাযোগ করুন"
     },
     
-    // Royal Protection
+    // Royal Protection (নাফিসার জন্য অপরিবর্তিত মেসেজ)
     royal: {
       "nafisa": {
         emoji: "👸",
@@ -42,12 +42,16 @@ module.exports.handleEvent = async function({ api, event }) {
           "💐 নাফিসা দেবীর নাম সম্মান সহকারে নিন!",
           "✨ মহারানীর নামে অসম্মান করো না!"
         ],
-        pattern: /(?:^|\s)নাফিসা(?=\s|$)/,
+        patterns: [
+          /(?:^|\s)(নাফিসা|nafisa)(?=\s|$)/i,
+          /@(নাফিসা|nafisa)/i,
+          /(?:^|\s)(নাফীসা|nafisa)(?=\s|$)/i  // বানানের ভিন্নতা কভার করতে
+        ],
         footer: "❤️ সম্মান বজায় রাখুন"
       }
     },
 
-    // Question Answering
+    // Question Answering (অপরিবর্তিত)
     questions: [
       {
         pattern: /(এডমিন|admin|বস|boss)(ের|er)?\s*(নাম|name)\s*(কি|what|who)/i,
@@ -56,14 +60,14 @@ module.exports.handleEvent = async function({ api, event }) {
     ]
   };
 
-  // Check for questions first
+  // Check for questions first (অপরিবর্তিত)
   for (const q of protectionSystem.questions) {
     if (q.pattern.test(body)) {
       return api.sendMessage(q.response, threadID, messageID);
     }
   }
 
-  // Check Admin Protection
+  // Check Admin Protection (অপরিবর্তিত)
   for (const pattern of protectionSystem.admin.patterns) {
     if (pattern.test(body)) {
       const randomResponse = protectionSystem.admin.responses[Math.floor(Math.random() * protectionSystem.admin.responses.length)];
@@ -72,13 +76,15 @@ module.exports.handleEvent = async function({ api, event }) {
     }
   }
 
-  // Check Royal Protection
+  // Check Royal Protection (শুধু ফাংশনালিটি আপডেট করা হয়েছে)
   for (const name in protectionSystem.royal) {
-    const { pattern, emoji, title, responses, footer } = protectionSystem.royal[name];
-    if (pattern.test(body)) {
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      const royalMessage = `${emoji} ${title} ${emoji}\n\n${randomResponse}\n\n${footer}`;
-      return api.sendMessage(royalMessage, threadID, messageID);
+    const royal = protectionSystem.royal[name];
+    for (const pattern of royal.patterns) {
+      if (pattern.test(body)) {
+        const randomResponse = royal.responses[Math.floor(Math.random() * royal.responses.length)];
+        const royalMessage = `${royal.emoji} ${royal.title} ${royal.emoji}\n\n${randomResponse}\n\n${royal.footer}`;
+        return api.sendMessage(royalMessage, threadID, messageID);
+      }
     }
   }
 };
