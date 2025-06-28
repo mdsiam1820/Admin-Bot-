@@ -1,39 +1,51 @@
-const axios = require("axios");
-
 module.exports.config = {
-  name: "message",
+  name: "sms",
   version: "1.0.0",
   hasPermssion: 0,
-  credits: "Developer SIAM",
-  description: "Send custom SMS using API",
-  commandCategory: "utility",
-  usages: "/message [number] [message]",
+  credits: "—͟͟͞͞𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
+  description: "একটি কাস্টম এসএমএস পাঠান (বোম্বার নয়)",
+  commandCategory: "Tool",
+  usages: "/sms 01xxxxxxxxx [message]",
   cooldowns: 5,
+  dependencies: { "axios": "" }
 };
 
+const axios = require("axios");
+
 module.exports.run = async ({ api, event, args }) => {
-  if (args.length < 2) {
+  const threadID = event.threadID;
+  
+  if (args[0] === "help") {
     return api.sendMessage(
-      "❌ ব্যবহারঃ /message [number] [message]\n\n📌 উদাহরণঃ /message 01832 hi",
-      event.threadID,
-      event.messageID
+      "•┄┅════❁🌺❁════┅┄•\n\n" +
+      "📱 কাস্টম এসএমএস সেন্ডার\n\n" +
+      "ব্যবহার:\n" +
+      "/sms 01xxxxxxxxx [message]\n\n" +
+      "উদাহরণ:\n" +
+      "/sms 01712345678 হ্যালো, এটি একটি টেস্ট মেসেজ\n\n" +
+      "•┄┅════❁🌺❁════┅┄•",
+      threadID
     );
   }
 
   const number = args[0];
-  const message = args.slice(1).join(" ");
+  const message = args.slice(1).join(" ") || "—͟͟͞͞𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️ দ্বারা পাঠানো বার্তা";
 
-  const url = `https://custom-sms.wuaze.com/index.php?number=${number}&message=${encodeURIComponent(message)}`;
+  if (!number || !/^01[0-9]{9}$/.test(number)) {
+    return api.sendMessage("⚠️ সঠিক ফরম্যাটে নাম্বার দিন:\n/sms 01xxxxxxxxx [message]", threadID);
+  }
 
   try {
-    const res = await axios.get(url);
-
-    if (res.data.includes("Success") || res.status === 200) {
-      api.sendMessage(`✅ সফলভাবে পাঠানো হয়েছে!\n📲 নম্বরঃ ${number}\n✉️ মেসেজঃ ${message}`, event.threadID);
-    } else {
-      api.sendMessage("❌ এসএমএস পাঠাতে সমস্যা হচ্ছে।", event.threadID);
-    }
-  } catch (error) {
-    api.sendMessage("❌ সার্ভারে সমস্যা হয়েছে বা API কাজ করছে না।", event.threadID);
+    const encodedMessage = encodeURIComponent(message);
+    await axios.get(`https://custom-sms.wuaze.com/index.php?number=${number}&message=${encodedMessage}`);
+    
+    return api.sendMessage(
+      `✅ এসএমএস সফলভাবে পাঠানো হয়েছে!\n\n` +
+      `📞 নম্বর: ${number}\n` +
+      `📝 মেসেজ: "${message}"`,
+      threadID
+    );
+  } catch (err) {
+    return api.sendMessage(`❌ এসএমএস পাঠাতে সমস্যা: ${err.message}`, threadID);
   }
 };
